@@ -35,7 +35,7 @@ def get_time() -> str:
 
 
 @plugin.command
-@lightbulb.command("get", "Get message logs", guilds=[431272247001612309])
+@lightbulb.command("get", "Get message logs")
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def get(ctx: lightbulb.Context):
     syslog.warning(
@@ -66,7 +66,6 @@ async def get(ctx: lightbulb.Context):
     "retrieve",
     "Retrieve previous messages",
     auto_defer=True,
-    guilds=[431272247001612309],
 )
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def retrieve(ctx: lightbulb.Context):
