@@ -1,0 +1,6 @@
+python-dotenv~=1.0.0
+uvloop~=0.17.0
+hikari[speedups]~=2.0.0.dev122
+hikari-lightbulb~=2.3.3
+hikari-miru~=3.1.1
+pytz~=2023
