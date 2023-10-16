@@ -30,10 +30,18 @@ def timestamp_to_local(ts: int | float) -> str:
 class nice_message:
     """Transform message into something more convenient"""
 
-    def __init__(self, mess_obj: hikari.Message, memb_obj: hikari.Member) -> None:
-        self.guild_id = mess_obj.guild_id if mess_obj.guild_id else memb_obj.guild_id
+    def __init__(
+        self,
+        mess_obj: hikari.Message,
+        memb_obj: hikari.Member,
+        guil_obj: hikari.Guild,
+        chan_obj: hikari.TextableChannel,
+    ) -> None:
+        self.guild = guil_obj
+        self.guild_id = guil_obj.id
 
-        self.channel_id = mess_obj.channel_id
+        self.channel_name = chan_obj.name
+        self.channel_id = chan_obj.id
 
         self.member = memb_obj
         self.member_id = int(memb_obj.id)
@@ -102,6 +110,7 @@ class nice_message:
             },
             "content": self.message.content,
             "id": self.message_id,
+            "message_link": self.message.make_link(guild=self.guild),
             "created_at_ts": self.created_at,
             "created_at_local": self.created_at_local,
         }
@@ -134,7 +143,7 @@ class nice_message:
                 f"\tSize: {bytes_to_human(attach.size)} | {attach.size}Bytes",
                 f"\tFilename: {attach.filename}",
                 f"\tURL: {attach.url}",
-                f"\tURL Expiry: {exp} | {timestamp_to_local(exp)}",
+                f"\tURL Expiry: {timestamp_to_local(exp)} | {exp}",
             ]
             return "\n".join(text)
 
@@ -152,7 +161,7 @@ class nice_message:
                 text.append(f"\tProvider: {embed.provider.name}")
             return "\n".join(text)
 
-        text = []
+        text = [" "]
 
         userline = "User: {u} | Global: {g} | Nick: {n} | ID: {i}".format(
             u=self.member.username,
@@ -170,11 +179,15 @@ class nice_message:
 
         text.append(f"Content: {self.message.content}")
 
-        creationline = f"Created at: {self.created_at} | {self.created_at_local}"
+        text.append(
+            f"Message Link: {self.message.make_link(guild=self.guild)}",
+        )
+
+        creationline = f"Created at: {self.created_at_local} | {self.created_at}"
         text.append(creationline)
 
         if self.edited_at:
-            editedline = f"Edited at: {self.edited_at} | {self.edited_at_local}"
+            editedline = f"Edited at: {self.edited_at_local} | {self.edited_at}"
             text.append(editedline)
 
         if self.attachment_count > 0:

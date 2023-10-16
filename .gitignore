@@ -1,3 +1,6 @@
 .env
-__*
 .vscode
+.venv
+__py*
+logs/
+data/

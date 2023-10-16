@@ -38,10 +38,12 @@ def log_message(mess: nice_message, chan_name: str, guild_name: str):
 
 def event_log(event):
     """shortcut func"""
-    nm = nice_message(mess_obj=event.message, memb_obj=event.get_member())
-    cn = event.get_channel().name
-    gn = event.get_guild().name
-    log_message(mess=nm, chan_name=cn, guild_name=gn)
+    ch = event.get_channel()
+    gu = event.get_guild()
+    nm = nice_message(
+        mess_obj=event.message, memb_obj=event.get_member(), chan_obj=ch, guil_obj=gu
+    )
+    log_message(mess=nm, chan_name=ch.name, guild_name=gu.name)
 
 
 @plugin.listener(GuildMessageCreateEvent)

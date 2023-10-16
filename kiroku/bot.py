@@ -90,7 +90,7 @@ class KBot(BotApp):
             )
         else:
             act = Activity(
-                name=f"to {BOT_PREFIX} and / | {ver}",
+                name=f"{BOT_PREFIX} and / | {ver}",
                 type=ActivityType.LISTENING,
             )
 

@@ -1,10 +1,12 @@
 import logging
+import string
 import time
 import hikari
 
 import lightbulb
 from datetime import datetime
 from pathlib import Path as Pathy
+from dateutil import parser
 import os
 import shutil
 
@@ -34,8 +36,32 @@ def get_time() -> str:
     return datetime.now().strftime(DATE_FORMAT).strip()
 
 
+def parse_time(time: str) -> datetime | bool:
+    """"""
+    time = time.strip()
+
+    def floaty(string):
+        try:
+            float(string)
+            return True
+        except ValueError:
+            return False
+
+    try:
+        if not time[:4].isnumeric():  # dmy
+            return parser.parse(timestr=time, dayfirst=True)
+        elif time[4] in string.punctuation:  # iso
+            return parser.parse(timestr=time, yearfirst=True)
+        elif floaty(time):  # ts
+            return datetime.fromtimestamp(float(time))
+    except Exception:
+        # log.exception(f"")
+        return False
+    return False
+
+
 @plugin.command
-@lightbulb.command("get", "Get message logs")
+@lightbulb.command("get", "Get real time message log files for current Guild")
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def get(ctx: lightbulb.Context):
     syslog.warning(
@@ -51,7 +77,7 @@ async def get(ctx: lightbulb.Context):
         os.remove(zipfile)
     zipfile = shutil.make_archive(zipfile.stem, "zip", guild_folder)
 
-    await ctx.respond("Message archive", attachment=zipfile)
+    await ctx.respond("Message Logs", attachment=zipfile)
 
 
 @plugin.command
@@ -59,12 +85,17 @@ async def get(ctx: lightbulb.Context):
     "limit", "Number of messages to retrieve", int, required=False, default=-1
 )
 @lightbulb.option(
-    "from_date", "Date to retrieve messages back to", required=False, type=datetime
+    "from_date",
+    "Date to retrieve messages back to. Either timestamp or regular date",
+    required=False,
+    default=None,
 )
-@lightbulb.option("format", "JSON or TXT", choices=["JSON", "TXT"], default="TXT")
+@lightbulb.option(
+    "format", "JSON or TXT (default)", choices=["JSON", "TXT"], default="TXT"
+)
 @lightbulb.command(
     "retrieve",
-    "Retrieve previous messages",
+    "Retrieve messages from current channel",
     auto_defer=True,
 )
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
@@ -72,6 +103,16 @@ async def retrieve(ctx: lightbulb.Context):
     syslog.warning(
         f"Retrieving messages in {ctx.channel_id} requested by {ctx.author.username} ({ctx.author.id})"
     )
+    from_date = ctx.options["from_date"]
+
+    if from_date:
+        from_date = parse_time(from_date)
+        if from_date:
+            from_date = from_date.timestamp()
+        else:
+            await ctx.respond("From_date not recognised")
+            return
+
     chan: hikari.TextableChannel = ctx.get_channel()
     guild: hikari.Guild = ctx.get_guild()
     history = chan.fetch_history()
@@ -81,17 +122,28 @@ async def retrieve(ctx: lightbulb.Context):
         data = []
     elif fmt == "JSON":
         data = {}
+
     limit = ctx.options["limit"]
     async for message in history:
-        if limit > 0:
-            limit -= 1
-        else:
-            break
+        if limit != -1:
+            print(f"{limit=}")
+            if limit > 0:
+                limit -= 1
+            else:
+                print("reached message limit")
+                break
+
+        if from_date:
+            if from_date > message.created_at.timestamp():
+                print("reached from_date limit")
+                break
 
         mem = message.member
         if not mem:
             mem = guild.get_member(message.author.id)
-        mess = nice_message(mess_obj=message, memb_obj=mem)
+        mess = nice_message(
+            mess_obj=message, memb_obj=mem, chan_obj=chan, guil_obj=guild
+        )
 
         if fmt == "TXT":
             data.append(mess.stringise())

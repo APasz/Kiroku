@@ -1,4 +1,10 @@
 {
+    "1.0": [
+        "Added; command: retrieve command now accepts from_date param. Supports DMY, YMD, and TS",
+        "Added; message: Message link for each message",
+        "Changed; message: str message format, swapped ts and iso",
+        "Changed; bot_manage: ensure command not purges application commands before syncing"
+    ],
     "0.0": [
         "Initial Public Release"
     ]

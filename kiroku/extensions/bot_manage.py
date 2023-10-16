@@ -39,8 +39,10 @@ async def shutdown(ctx: lightbulb.Context):
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def ensure(ctx: lightbulb.Context):
     syslog.info("Ensuring commands")
+    await ctx.bot.purge_application_commands(ctx.guild_id, global_commands=True)
+    await ctx.respond("Torn Down!")
     await ctx.bot.sync_application_commands()
-    await ctx.respond("Done!")
+    await ctx.respond("Synced!")
 
 
 @plugin.command
