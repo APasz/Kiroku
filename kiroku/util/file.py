@@ -168,6 +168,8 @@ class Read_Write:
 def bytes_magnitude(byte_num: int, magnitude: str, bi: bool) -> float:
     """Turns an int into a more friendly magnitude
     magnitude=['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']"""
+    syslog.debug("Multiply bytes")
+
     if bi:
         bi = 1024
     else:
@@ -176,13 +178,14 @@ def bytes_magnitude(byte_num: int, magnitude: str, bi: bool) -> float:
     try:
         return round(byte_num / math.pow(bi, ratios[magnitude.upper()]), 3)
     except Exception:
-        # syslog.exception("BytesMag")
+        syslog.exception("BytesMag")
         return False
 
 
 def bytes_auto(byte_num: int | str) -> str:
     """Determine the magnitude for a given number of bytes"""
-    print(byte_num)
+    syslog.debug("Finding magnitude for %s", byte_num)
+
     x = int(len(str(byte_num)))
     if x <= 3:
         return ""
@@ -210,11 +213,13 @@ def bytes_to_human(
     """Turns an int into a friendly notation, eg 2.5MiB.
     magnitude= ['AUTO', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'].
     bi= power of 10 or power of 2"""
+    syslog.debug("Converting bytes to human")
+
     if not isinstance(byte_num, int):
         try:
             byte_num = int(byte_num)
         except Exception:
-            # syslog.exception("Not convertable to int")
+            syslog.exception("Not convertable to int")
             return False
 
     if byte_num <= 1024:

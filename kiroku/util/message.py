@@ -33,21 +33,33 @@ class nice_message:
     def __init__(
         self,
         mess_obj: hikari.Message,
-        memb_obj: hikari.Member,
+        memb_obj: hikari.Member | None,
         guil_obj: hikari.Guild,
         chan_obj: hikari.TextableChannel,
     ) -> None:
+        syslog.debug("Making message nice")
+
         self.guild = guil_obj
         self.guild_id = guil_obj.id
 
         self.channel_name = chan_obj.name
         self.channel_id = chan_obj.id
 
-        self.member = memb_obj
-        self.member_id = int(memb_obj.id)
+        if isinstance(memb_obj, hikari.Member):
+            self.member: hikari.Member = memb_obj
+            self.member_id = int(memb_obj.id)
+            self.member_nick = self.member.nickname
+            self.member_display = self.member.display_name
+        if not memb_obj:
+            syslog.info("Member unretrievable")
+            self.member: hikari.User = mess_obj.author
+            self.member_id = int(mess_obj.author.id)
+            self.member_nick = None
+            self.member_display = self.member.username
 
         self.message = mess_obj
         self.message_id = int(mess_obj.id)
+        self.message_content = mess_obj.content
 
         self.created_at = round(mess_obj.created_at.timestamp(), 3)
         self.created_at_local = timestamp_to_local(self.created_at)
@@ -70,6 +82,7 @@ class nice_message:
 
     def jsonise(self) -> dict:
         """Transform into nice JSON format"""
+        syslog.debug("JSONising message")
 
         def attach_dict(attach: hikari.Attachment) -> dict:
             exp = find_link_expiry(attach.url)
@@ -104,12 +117,12 @@ class nice_message:
                 "id": self.member_id,
                 "user": self.member.username,
                 "global": self.member.global_name,
-                "nick": self.member.nickname,
+                "nick": self.member_nick,
                 "is_bot": self.member.is_bot,
                 "is_system": self.member.is_system,
             },
-            "content": self.message.content,
-            "id": self.message_id,
+            "content": self.message_content,
+            "message_id": self.message_id,
             "message_link": self.message.make_link(guild=self.guild),
             "created_at_ts": self.created_at,
             "created_at_local": self.created_at_local,
@@ -135,6 +148,7 @@ class nice_message:
 
     def stringise(self):
         """Return in nice string format"""
+        syslog.debug("STRINGising message")
 
         def attach_str(attach: hikari.Attachment) -> str:
             exp = find_link_expiry(attach.url)
@@ -161,23 +175,26 @@ class nice_message:
                 text.append(f"\tProvider: {embed.provider.name}")
             return "\n".join(text)
 
-        text = [" "]
+        text = []
 
         userline = "User: {u} | Global: {g} | Nick: {n} | ID: {i}".format(
             u=self.member.username,
             g=self.member.global_name,
-            n=self.member.nickname,
+            n=self.member_nick,
             i=self.member_id,
         )
+
         if self.member.is_bot:
             userline += " | IS_BOT"
         if self.member.is_system:
             userline += " | IS_SYSTEM"
         text.append(userline)
 
-        text.append(f"ID: {self.message_id}" + (" (Edited)" if self.edited_at else ""))
+        text.append(f"Content: {self.message_content}")
 
-        text.append(f"Content: {self.message.content}")
+        text.append(
+            f"Message ID: {self.message_id}" + (" (Edited)" if self.edited_at else "")
+        )
 
         text.append(
             f"Message Link: {self.message.make_link(guild=self.guild)}",
@@ -203,9 +220,23 @@ class nice_message:
         text.append("\n")
         return "\n".join(text)
 
+    def stringise_compact(self):
+        """Return in nice compact string format"""
+        syslog.debug("STRINGising message compactly")
+
+        embed = attach = " "
+        if self.attachment_count > 0:
+            attach = "A"
+        if self.embed_count > 0:
+            embed = "E"
+
+        return f"{self.member_display:36}|{self.created_at_local}|{attach}{embed}| {self.message_content}"
+
 
 def create_logger(file_path: Pathy) -> logging.Logger:
     """Creates a logging object"""
+    syslog.info("Creating logger")
+
     file_path.parent.mkdir(exist_ok=True, parents=True)
 
     log = logging.getLogger(file_path.stem)

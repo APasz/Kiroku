@@ -1,9 +1,17 @@
 {
+    "2.0": [
+        "Added: bot_error extension to handle errors",
+        "Added; command.retrieve: If bot doesn't have perms to see message histroy, user is informed",
+        "Added; command.retrieve: from_date, limit, guild_id, channel_id are added to archive",
+        "Added; command.retrieve|message.nice_message: TXT [COMPACT] format which only includes Display_Name, Date, Flag for attachments/embeds, Content",
+        "Fixed; message.nice_message: If a member object can't be found because the user has left the guild, message.author is used instead",
+        "Cleanup"
+    ],
     "1.0": [
-        "Added; command: retrieve command now accepts from_date param. Supports DMY, YMD, and TS",
-        "Added; message: Message link for each message",
-        "Changed; message: str message format, swapped ts and iso",
-        "Changed; bot_manage: ensure command not purges application commands before syncing"
+        "Added; command.retrieve: command now accepts from_date param. Supports DMY, YMD, and TS",
+        "Added; message.nice_message: Message link for each message",
+        "Changed; message.nice_message: str message format, swapped ts and iso",
+        "Changed; bot_manage.ensure: Now purges application commands before syncing"
     ],
     "0.0": [
         "Initial Public Release"

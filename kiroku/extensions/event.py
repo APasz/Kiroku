@@ -1,5 +1,4 @@
 import logging
-import time
 
 from hikari.events import GuildMessageCreateEvent, GuildMessageUpdateEvent
 
@@ -14,13 +13,9 @@ syslog = logging.getLogger(SYSLOG)
 
 plugin = lightbulb.Plugin(name="Event", description="Module housing event functions")
 
-load_time = time.time()
-
 
 def load(bot: lightbulb.BotApp):
     bot.add_plugin(plugin)
-    global load_time
-    load_time = time.time()
 
 
 def unload(bot: lightbulb.BotApp):
